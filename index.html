@@ -3,24 +3,170 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hottest Place RN</title>
+  <title>hottest place rn</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      text-transform: lowercase;
       text-align: center;
-      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+      color: white;
+    }
+    
+    /* flashing fire-like background */
+    @keyframes fireBackground {
+      0% { background-color: red; }
+      33% { background-color: orange; }
+      66% { background-color: yellow; }
+      100% { background-color: red; }
+    }
+    
+    body {
+      animation: fireBackground 5s infinite alternate;
       padding: 50px;
     }
+    
     h1 {
-      color: #333;
+      margin-bottom: 20px;
     }
-    p {
-      font-size: 1.5rem;
+    
+    .hottest {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 50px;
+    }
+
+    .days {
+      margin-top: 50px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .day {
+      cursor: pointer;
+      padding: 10px;
+      border: 2px solid white;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .day:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .timeline {
+      display: none;
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid white;
+      border-radius: 5px;
+      background-color: rgba(0, 0, 0, 0.5);
+      text-align: left;
+    }
+
+    .timeline div {
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .timeline div:hover {
+      text-decoration: underline;
+    }
+
+    /* Add smooth scrolling */
+    html {
+      scroll-behavior: smooth;
     }
   </style>
 </head>
 <body>
-  <h1>Hottest Place in the World Right Now</h1>
-  <p>Data coming soon...</p>
+  <h1>hottest place rn</h1>
+  <div class="hottest">
+    <p>fetching data...</p>
+  </div>
+
+  <h2>past days</h2>
+  <div class="days">
+    <div class="day" data-day="2024-09-22">today</div>
+    <div class="day" data-day="2024-09-21">yesterday</div>
+    <div class="day" data-day="2024-09-20">two days ago</div>
+    <!-- add more days as needed -->
+  </div>
+
+  <div id="timelineContainer"></div>
+
+  <script>
+    // OpenWeatherMap API details
+    const API_KEY = 'aae9ec9dc44356e2ac459ebfe45ba702';
+    const API_URL = 'https://api.openweathermap.org/data/2.5/weather?q=';
+    const cities = ['Death Valley', 'Sahara Desert', 'Dubai', 'Phoenix', 'Kuwait City', 'Baghdad', 'Delhi'];
+
+    async function fetchWeatherData(city) {
+      const response = await fetch(`${API_URL}${city}&appid=${API_KEY}&units=metric`);
+      const data = await response.json();
+      return data;
+    }
+
+    async function fetchHottestPlace() {
+      let hottest = { city: '', temp: -Infinity, time: '' };
+
+      // Loop through the cities to get the hottest place
+      for (let city of cities) {
+        const data = await fetchWeatherData(city);
+        if (data.main.temp > hottest.temp) {
+          hottest = {
+            city: data.name,
+            temp: data.main.temp,
+            time: new Date(data.dt * 1000).toLocaleTimeString(),
+          };
+        }
+      }
+
+      // Update the UI with the hottest place
+      document.querySelector('.hottest').innerHTML = `
+        <p>hottest place right now is ${hottest.city}</p>
+        <p>temperature: ${hottest.temp}°C at ${hottest.time}</p>
+      `;
+    }
+
+    async function fetchPastData(day) {
+      // Mocking past data for simplicity, you can use a weather API's history feature
+      const pastData = [
+        { time: '12:00 am', location: 'Sahara Desert', temperature: '45°C' },
+        { time: '3:00 am', location: 'Death Valley', temperature: '47°C' },
+        { time: '6:00 am', location: 'Gobi Desert', temperature: '42°C' },
+        { time: '9:00 am', location: 'Sahara Desert', temperature: '49°C' },
+        { time: '12:00 pm', location: 'Death Valley', temperature: '54°C' },
+        { time: '3:00 pm', location: 'Namib Desert', temperature: '50°C' },
+        { time: '6:00 pm', location: 'Arabian Desert', temperature: '48°C' },
+        { time: '9:00 pm', location: 'Gobi Desert', temperature: '43°C' }
+      ];
+
+      // Create the timeline
+      const timelineContainer = document.getElementById('timelineContainer');
+      let timelineHTML = `
+        <div class="timeline" id="timeline-${day}">
+          ${pastData.map(entry => `
+            <div>${entry.time} - ${entry.location}: ${entry.temperature}</div>
+          `).join('')}
+        </div>
+      `;
+
+      timelineContainer.innerHTML = timelineHTML;
+      document.querySelector(`#timeline-${day}`).style.display = 'block';
+    }
+
+    document.querySelectorAll('.day').forEach(dayElem => {
+      dayElem.addEventListener('click', () => {
+        const day = dayElem.getAttribute('data-day');
+        fetchPastData(day);
+      });
+    });
+
+    // Fetch the hottest place on page load
+    fetchHottestPlace();
+  </script>
 </body>
 </html>
