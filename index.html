@@ -15,10 +15,10 @@
       font-family: Arial, sans-serif;
       color: white;
       height: 100vh;
-      background: linear-gradient(135deg, red, orange, yellow);
-      animation: flashBackground 3s infinite alternate;
       overflow-y: auto;
       scroll-behavior: smooth;
+      background: linear-gradient(135deg, red, orange, yellow);
+      animation: flashBackground 3s infinite alternate;
     }
 
     @keyframes flashBackground {
@@ -32,7 +32,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       transition: opacity 1s ease-in-out;
     }
 
@@ -84,20 +84,30 @@
       right: 10px;
       cursor: pointer;
       padding: 5px 15px;
-      font-size: 1.2rem;
+      font-size: 1.5rem;
       border: none;
       color: white;
       background: none;
       text-align: center;
+      transition: opacity 0.5s ease-in-out;
     }
 
     #tempSwitch:hover {
       color: rgba(255, 255, 255, 0.7);
     }
+
+    .fade {
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .fade.show {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
-  <div id="tempSwitch">C* F*</div>
+  <div id="tempSwitch">C</div>
 
   <div class="main">
     <div class="hottest-place" id="hottestPlaceDisplay">
@@ -113,7 +123,7 @@
   </div>
 
   <script>
-    const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Insert your OpenWeatherMap API key
+    const API_KEY = 'your_api_key_here'; // Insert your OpenWeatherMap API key
     const API_URL = 'https://api.openweathermap.org/data/2.5/weather?q=';
     const cities = ['Death Valley', 'Sahara Desert', 'Dubai', 'Phoenix', 'Kuwait City', 'Baghdad', 'Delhi'];
     let isCelsius = true;
@@ -182,8 +192,12 @@
     // Toggle temperature between Celsius and Fahrenheit
     document.getElementById('tempSwitch').addEventListener('click', () => {
       isCelsius = !isCelsius;
-      fetchHottestPlace();
-      document.getElementById('tempSwitch').textContent = isCelsius ? 'C* F*' : 'F* C*';
+      document.getElementById('tempSwitch').classList.remove('show'); // Fade out
+      setTimeout(() => {
+        fetchHottestPlace();
+        document.getElementById('tempSwitch').textContent = isCelsius ? 'C' : 'F';
+        document.getElementById('tempSwitch').classList.add('show'); // Fade in
+      }, 500); // Delay for fade out before changing text
     });
 
     // Initial fetch on page load
