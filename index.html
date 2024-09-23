@@ -34,6 +34,14 @@
     h1 {
       font-size: 3rem;
       text-align: center;
+      display: flex;
+      align-items: center;
+    }
+
+    .edit-icon {
+      margin-left: 10px;
+      width: 25px;
+      cursor: pointer;
     }
 
     .place {
@@ -59,20 +67,70 @@
       border: none;
       transition: opacity 0.5s ease;
     }
+
+    /* Dropdown menu for region selection */
+    .region-select {
+      display: none;
+      position: absolute;
+      top: 50px;
+      background-color: white;
+      color: black;
+      border-radius: 5px;
+      padding: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .region-select.active {
+      display: block;
+    }
+
+    .region-select select {
+      padding: 5px;
+      font-size: 1rem;
+    }
+
   </style>
 </head>
 <body>
   <div id="tempSwitch">°C</div>
-  <h1>Hottest Place RN</h1>
+  <h1>
+    Hottest Place RN in the <span id="selectedRegion">World</span>
+    <img src="https://png.pngtree.com/element_our/20190528/ourmid/pngtree-black-edit-icon-image_1130448.jpg" alt="Edit" class="edit-icon" id="editIcon">
+  </h1>
   <div class="place" id="hottestPlaceDisplay">Loading place...</div>
   <div class="temperature" id="temperatureDisplay">Loading temperature...</div>
 
-  <script>
-    const API_KEY = '639a9d9405836e20490358fb8d985a2a';
-    const API_URL = 'https://api.openweathermap.org/data/2.5/weather?';
-    const cities = ['New York', 'London', 'Tokyo', 'Delhi', 'São Paulo', 'Seoul', 'Shanghai', 'Los Angeles', 'Paris', 'Istanbul'];
-    let isCelsius = true;
+  <!-- Region selection dropdown -->
+  <div class="region-select" id="regionSelect">
+    <select id="regionDropdown">
+      <option value="global">Global</option>
+      <option value="middle-east">Middle East</option>
+      <option value="north-america">North America</option>
+      <option value="africa">Africa</option>
+      <option value="asia">Asia</option>
+      <option value="europe">Europe</option>
+    </select>
+    <button id="confirmRegion">Confirm</button>
+  </div>
 
+  <script>
+    const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Insert your OpenWeatherMap API key here
+    const API_URL = 'https://api.openweathermap.org/data/2.5/weather?';
+
+    // Define regions with representative cities
+    const regions = {
+      'global': ['Death Valley', 'Kuwait City', 'Sahara Desert', 'Baghdad', 'Dubai', 'Phoenix', 'Delhi'],
+      'middle-east': ['Kuwait City', 'Baghdad', 'Dubai', 'Riyadh', 'Doha'],
+      'north-america': ['Phoenix', 'Las Vegas', 'Death Valley', 'Dallas', 'Houston'],
+      'africa': ['Sahara Desert', 'Cairo', 'Nairobi', 'Lagos', 'Khartoum'],
+      'asia': ['Delhi', 'Bangkok', 'Jakarta', 'Manila', 'Karachi'],
+      'europe': ['Athens', 'Rome', 'Madrid', 'Paris', 'Lisbon']
+    };
+
+    let isCelsius = true;
+    let selectedRegion = 'global'; // Default region
+
+    // Fetch weather data for a specific region
     async function fetchWeatherData(city) {
       const units = isCelsius ? "metric" : "imperial";
       const response = await fetch(`${API_URL}q=${city}&appid=${API_KEY}&units=${units}`);
@@ -80,8 +138,11 @@
       return await response.json();
     }
 
+    // Find the hottest place in the selected region
     async function fetchHottestPlace() {
+      const cities = regions[selectedRegion];
       let hottest = { city: '', temp: -Infinity };
+
       for (const city of cities) {
         try {
           const data = await fetchWeatherData(city);
@@ -98,27 +159,39 @@
       updateDisplay(hottest);
     }
 
+    // Update the hottest place and temperature on the webpage
     function updateDisplay(hottest) {
       const temperature = `${hottest.temp.toFixed(1)}°${isCelsius ? 'C' : 'F'}`;
       document.getElementById('hottestPlaceDisplay').textContent = hottest.city;
       document.getElementById('temperatureDisplay').textContent = `Temperature: ${temperature}`;
     }
 
+    // Handle temperature unit switch
     const tempSwitch = document.getElementById('tempSwitch');
     tempSwitch.addEventListener('click', () => {
       isCelsius = !isCelsius;
-      tempSwitch.classList.add('fade-out');
-      setTimeout(() => {
-        tempSwitch.textContent = isCelsius ? '°C' : '°F';
-        tempSwitch.classList.remove('fade-out');
-        tempSwitch.classList.add('fade-in');
-        setTimeout(() => {
-          tempSwitch.classList.remove('fade-in');
-        }, 250);
-      }, 250);
-      fetchHottestPlace();
+      tempSwitch.textContent = isCelsius ? '°C' : '°F';
+      fetchHottestPlace(); // Re-fetch with updated unit
     });
-    
+
+    // Show region selection dropdown when the edit icon is clicked
+    const editIcon = document.getElementById('editIcon');
+    const regionSelect = document.getElementById('regionSelect');
+    editIcon.addEventListener('click', () => {
+      regionSelect.classList.toggle('active'); // Toggle dropdown visibility
+    });
+
+    // Confirm the selected region
+    const confirmRegion = document.getElementById('confirmRegion');
+    confirmRegion.addEventListener('click', () => {
+      const selectedOption = document.getElementById('regionDropdown').value;
+      selectedRegion = selectedOption; // Update the selected region
+      document.getElementById('selectedRegion').textContent = selectedOption.replace('-', ' ').toUpperCase();
+      regionSelect.classList.remove('active'); // Hide dropdown
+      fetchHottestPlace(); // Fetch hottest place for the selected region
+    });
+
+    // Initial fetch on page load
     fetchHottestPlace();
   </script>
 </body>
