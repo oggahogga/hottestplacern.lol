@@ -19,8 +19,8 @@
     body {
       font-family: Arial, sans-serif;
       color: white;
-      min-height: 200vh; /* Ensure there's enough content for scrolling */
-      overflow-y: scroll; /* Keep scrolling */
+      min-height: 200vh;
+      overflow-y: scroll;
       background: linear-gradient(135deg, red, orange, yellow);
       animation: flashBackground 3s infinite alternate;
       background-attachment: fixed;
@@ -145,10 +145,9 @@
     </div>
     <div class="content" id="content">
       <h2>Past Days</h2>
-      <div class="day" data-day="today">Today</div>
-      <div class="day" data-day="yesterday">Yesterday</div>
-      <div class="day" data-day="two days ago">Two Days Ago</div>
-      <div id="timelineContainer"></div>
+      <div class="day" data-day="0">Today</div>
+      <div class="day" data-day="1">Yesterday</div>
+      <div class="day" data-day="2">Two Days Ago</div>
     </div>
   </div>
 
@@ -156,36 +155,37 @@
   <div class="modal" id="modal">
     <div class="modal-content" id="modalContent">
       <span class="close-modal" id="closeModal">&times;</span>
-      <h3 id="modalTitle">Past Day Timeline</h3>
+      <h3 id="modalTitle">Temperature Timeline</h3>
       <div id="modalTimeline"></div>
     </div>
   </div>
 
   <script>
-    const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Insert your OpenWeatherMap API key
+    const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Replace with your real API key
     const API_URL = 'https://api.openweathermap.org/data/2.5/onecall/timemachine';
-    const locationData = { lat: 36.4623, lon: -116.8656 }; // Example: Death Valley
+    const locationData = { lat: 36.4623, lon: -116.8656 }; // Death Valley coordinates
     let isCelsius = true;
 
     async function fetchWeatherDataForPastDays(dayOffset) {
-      const unixTime = Math.floor((Date.now() / 1000) - (dayOffset * 86400)); // Past day's timestamp
+      const unixTime = Math.floor((Date.now() / 1000) - (dayOffset * 86400)); // Timestamp for the past days
       const response = await fetch(`${API_URL}?lat=${locationData.lat}&lon=${locationData.lon}&dt=${unixTime}&appid=${API_KEY}&units=metric`);
-      if (!response.ok) throw new Error('Failed to fetch weather data');
+      if (!response.ok) {
+        console.error('Failed to fetch weather data');
+        return null;
+      }
       return await response.json();
     }
 
     async function fetchHottestPlace() {
-      try {
-        const data = await fetchWeatherDataForPastDays(0);
-        const hottest = data.current;
-        updateHottestPlace(hottest);
-      } catch (error) {
-        console.error(error);
+      const data = await fetchWeatherDataForPastDays(0); // Get today's data
+      if (data) {
+        const temp = data.current.temp;
+        updateHottestPlace(temp);
       }
     }
 
-    function updateHottestPlace(hottest) {
-      const temperature = isCelsius ? `${hottest.temp}°C` : `${(hottest.temp * 9/5 + 32).toFixed(1)}°F`;
+    function updateHottestPlace(temp) {
+      const temperature = isCelsius ? `${temp}°C` : `${(temp * 9/5 + 32).toFixed(1)}°F`;
       document.getElementById('hottestPlaceDisplay').innerHTML = `
         <p>hottest place rn: Death Valley</p>
         <p>temperature: ${temperature}</p>
@@ -194,35 +194,23 @@
 
     document.querySelectorAll('.day').forEach(dayElem => {
       dayElem.addEventListener('click', async () => {
-        const day = dayElem.getAttribute('data-day');
-        const dayOffset = getDayOffset(day);
-        try {
-          const data = await fetchWeatherDataForPastDays(dayOffset);
-          showModal(data, day);
-        } catch (error) {
-          console.error(error);
+        const dayOffset = parseInt(dayElem.getAttribute('data-day'));
+        const data = await fetchWeatherDataForPastDays(dayOffset);
+        if (data) {
+          showModal(data);
         }
       });
     });
 
-    function getDayOffset(day) {
-      switch (day) {
-        case 'today': return 0;
-        case 'yesterday': return 1;
-        case 'two days ago': return 2;
-        default: return 0;
-      }
-    }
-
-    function showModal(data, day) {
+    function showModal(data) {
       const modal = document.getElementById('modal');
-      const modalTitle = document.getElementById('modalTitle');
       const modalTimeline = document.getElementById('modalTimeline');
+      const temp = isCelsius ? `${data.current.temp}°C` : `${(data.current.temp * 9/5 + 32).toFixed(1)}°F`;
+      const time = new Date(data.current.dt * 1000).toLocaleTimeString();
 
-      modalTitle.textContent = `Temperature Timeline for ${day}`;
       modalTimeline.innerHTML = `
-        <p>Time: ${new Date(data.current.dt * 1000).toLocaleTimeString()}</p>
-        <p>Temperature: ${isCelsius ? data.current.temp + '°C' : (data.current.temp * 9/5 + 32).toFixed(1) + '°F'}</p>
+        <p>Time: ${time}</p>
+        <p>Temperature: ${temp}</p>
       `;
 
       modal.style.display = 'flex';
@@ -235,18 +223,8 @@
     // Toggle temperature between Celsius and Fahrenheit
     document.getElementById('tempSwitch').addEventListener('click', () => {
       isCelsius = !isCelsius;
-      fetchHottestPlace();
-      toggleTempSwitch();
+      fetchHottestPlace(); // Re-fetch with updated unit
     });
-
-    function toggleTempSwitch() {
-      const tempSwitch = document.getElementById('tempSwitch');
-      tempSwitch.classList.add('fade');
-      setTimeout(() => {
-        tempSwitch.textContent = isCelsius ? 'C' : 'F';
-        tempSwitch.classList.remove('fade');
-      }, 500); // Time for the fade effect
-    }
 
     // Initial fetch on page load
     fetchHottestPlace();
