@@ -21,7 +21,7 @@
       justify-content: center;
       background: #ff0000;
       animation: flashBackground 20s infinite alternate ease-in-out;
-      text-align: center; /* Added for centering text */
+      text-align: center;
     }
 
     @keyframes flashBackground {
@@ -32,17 +32,17 @@
       100% { background: #ffff00; }
     }
 
-    h1 {
-      font-size: 3rem;
+    .main-title {
+      font-size: 4rem; /* Increased font size for the main title */
       display: flex;
-      align-items: center;
-      text-transform: lowercase;
+      align-items: center; /* Center edit icon vertically with the title */
+      justify-content: center; /* Center the title and edit icon */
+      margin-bottom: 20px; /* Space below the title */
     }
 
     .edit-icon {
-      margin-left: 10px;
-      width: 25px;
-      cursor: pointer;
+      margin-left: 10px; /* Space between title and edit icon */
+      width: 30px; /* Slightly larger icon */
     }
 
     .place {
@@ -51,24 +51,11 @@
       text-transform: lowercase;
     }
 
-    .region-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 20px; /* Add some spacing */
-}
-
-#selectedRegion {
-  font-size: 2.5rem; /* Larger font size */
-  margin-right: 10px; /* Space between region text and edit button */
-}
-
-.temperature {
-  font-size: 3rem; /* Increased font size */
-  margin-top: 1vh;
-  text-transform: lowercase;
-}
-
+    .temperature {
+      font-size: 3rem; /* Increased font size */
+      margin-top: 1vh;
+      text-transform: lowercase;
+    }
 
     #tempSwitch {
       position: fixed;
@@ -161,12 +148,11 @@
 </head>
 <body>
   <div id="tempSwitch">°C</div>
-  <h1>
-    <img src="https://github.com/oggahogga/hottestplacern.lol/blob/fe0e4da78efd658925cdad7b0146843479b71356/image-removebg-preview%20(3).png?raw=true" alt="edit" class="edit-icon" id="editIcon">
-  </h1>
+  <h1 class="main-title">hottest place rn <span id="selectedRegion">world</span></h1>
+  <img src="https://github.com/oggahogga/hottestplacern.lol/blob/fe0e4da78efd658925cdad7b0146843479b71356/image-removebg-preview%20(3).png?raw=true" alt="edit" class="edit-icon" id="editIcon">
+  
   <div class="place" id="hottestPlaceDisplay">loading place...</div>
   <div class="temperature" id="temperatureDisplay">loading temperature...</div>
-  hottest place rn <span id="selectedRegion">world</span>
 
   <!-- Modal for region selection -->
   <div class="modal" id="regionModal">
@@ -196,17 +182,16 @@
     const API_URL = 'https://api.openweathermap.org/data/2.5/weather?';
 
     // Define regions with more cities per region
-const regions = {
-  'global': ['death valley', 'kuwait city', 'sahara desert', 'baghdad', 'dubai', 'phoenix', 'delhi', 'riyadh', 'las vegas', 'cairo', 'dallas', 'new orleans', 'acapulco', 'marrakesh'],
-  'middle-east': ['kuwait city', 'baghdad', 'dubai', 'riyadh', 'doha', 'muscat', 'abu dhabi', 'amman', 'tehran', 'jerusalem', 'beirut', 'bahrain', 'tunis'],
-  'north-america': ['phoenix', 'las vegas', 'death valley', 'dallas', 'houston', 'los angeles', 'mexico city', 'new orleans', 'miami', 'las cruces', 'tucson', 'san antonio', 'orlando', 'pittsburgh'],
-  'africa': ['sahara desert', 'cairo', 'nairobi', 'lagos', 'khartoum', 'addis ababa', 'cape town', 'algiers', 'harare', 'luanda', 'kinshasa', 'dakar', 'johannesburg'],
-  'asia': ['delhi', 'bangkok', 'jakarta', 'manila', 'karachi', 'mumbai', 'tokyo', 'singapore', 'hong kong', 'seoul', 'ho chi minh city', 'beijing', 'kuala lumpur'],
-  'europe': ['athens', 'rome', 'madrid', 'paris', 'lisbon', 'seville', 'istanbul', 'milan', 'barcelona', 'prague', 'budapest', 'warsaw', 'sofia'],
-  'south-america': ['buenos aires', 'rio de janeiro', 'lima', 'santiago', 'bogota', 'caracas', 'sao paulo', 'montevideo', 'asuncion', 'cali', 'salvador', 'quito'],
-  'australia': ['sydney', 'melbourne', 'perth', 'adelaide', 'brisbane', 'darwin', 'alice springs', 'hobart', 'canberra', 'gold coast', 'newcastle', 'sunshine coast']
-};
-
+    const regions = {
+      'global': ['death valley', 'kuwait city', 'sahara desert', 'baghdad', 'dubai', 'phoenix', 'delhi', 'riyadh', 'las vegas', 'cairo', 'dallas', 'new orleans', 'acapulco', 'marrakesh'],
+      'middle-east': ['kuwait city', 'baghdad', 'dubai', 'riyadh', 'doha', 'muscat', 'abu dhabi', 'amman', 'tehran', 'jerusalem', 'beirut', 'bahrain', 'tunis'],
+      'north-america': ['phoenix', 'las vegas', 'death valley', 'dallas', 'houston', 'los angeles', 'mexico city', 'new orleans', 'miami', 'las cruces', 'tucson', 'san antonio', 'orlando', 'pittsburgh'],
+      'africa': ['sahara desert', 'cairo', 'nairobi', 'lagos', 'khartoum', 'addis ababa', 'cape town', 'algiers', 'harare', 'luanda', 'kinshasa', 'dakar', 'johannesburg'],
+      'asia': ['delhi', 'bangkok', 'jakarta', 'manila', 'karachi', 'mumbai', 'tokyo', 'singapore', 'hong kong', 'seoul', 'ho chi minh city', 'beijing', 'kuala lumpur'],
+      'europe': ['athens', 'rome', 'madrid', 'paris', 'lisbon', 'seville', 'istanbul', 'milan', 'barcelona', 'prague', 'budapest', 'warsaw', 'sofia'],
+      'south-america': ['buenos aires', 'rio de janeiro', 'lima', 'santiago', 'bogota', 'caracas', 'sao paulo', 'montevideo', 'asuncion', 'cali', 'salvador', 'quito'],
+      'australia': ['sydney', 'melbourne', 'perth', 'adelaide', 'brisbane', 'darwin', 'alice springs', 'hobart', 'canberra', 'gold coast', 'newcastle', 'sunshine coast']
+    };
 
     let isCelsius = true;
     let selectedRegion = 'global'; // Default region
@@ -244,7 +229,7 @@ const regions = {
     function updateDisplay(hottest) {
       const temperature = `${hottest.temp.toFixed(1)}°${isCelsius ? 'c' : 'f'}`;
       document.getElementById('hottestPlaceDisplay').textContent = hottest.city;
-      document.getElementById('temperatureDisplay').textContent = temperature; // Fixed syntax error here
+      document.getElementById('temperatureDisplay').textContent = temperature;
     }
 
     // Handle temperature unit switch
