@@ -13,11 +13,12 @@
 
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
       color: white;
       height: 100vh;
-      overflow: hidden;
+      background: linear-gradient(135deg, red, orange, yellow);
       animation: flashBackground 3s infinite alternate;
+      overflow-y: auto;
+      scroll-behavior: smooth;
     }
 
     @keyframes flashBackground {
@@ -31,15 +32,13 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100%;
-      opacity: 1;
+      height: 100vh;
       transition: opacity 1s ease-in-out;
     }
 
     .hottest-place {
       font-size: 3rem;
       margin-top: 20vh;
-      opacity: 1;
     }
 
     .content {
@@ -47,6 +46,7 @@
       flex-direction: column;
       align-items: center;
       margin-top: 50px;
+      opacity: 0;
       transition: opacity 1s ease-in-out;
     }
 
@@ -57,11 +57,12 @@
       border-radius: 10px;
       margin: 10px 0;
       background-color: rgba(255, 255, 255, 0.1);
-      transition: background-color 0.3s;
+      transition: background-color 0.3s, transform 0.3s;
     }
 
     .day:hover {
       background-color: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
     }
 
     .timeline {
@@ -76,9 +77,28 @@
     .timeline.show {
       display: block;
     }
+
+    #tempSwitch {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      padding: 5px 15px;
+      font-size: 1.2rem;
+      border: none;
+      color: white;
+      background: none;
+      text-align: center;
+    }
+
+    #tempSwitch:hover {
+      color: rgba(255, 255, 255, 0.7);
+    }
   </style>
 </head>
 <body>
+  <div id="tempSwitch">C* F*</div>
+
   <div class="main">
     <div class="hottest-place" id="hottestPlaceDisplay">
       <p>fetching hottest place...</p>
@@ -152,18 +172,29 @@
         { time: '6:00 pm', location: 'Arabian Desert', temperature: isCelsius ? '48°C' : '118.4°F' },
         { time: '9:00 pm', location: 'Gobi Desert', temperature: isCelsius ? '43°C' : '109.4°F' }
       ];
-      
+
       const timeline = document.createElement('div');
       timeline.className = 'timeline show';
       timeline.innerHTML = timelineData.map(entry => `<div>${entry.time} - ${entry.location}: ${entry.temperature}</div>`).join('');
       dayElem.after(timeline);
     }
 
+    // Toggle temperature between Celsius and Fahrenheit
+    document.getElementById('tempSwitch').addEventListener('click', () => {
+      isCelsius = !isCelsius;
+      fetchHottestPlace();
+      document.getElementById('tempSwitch').textContent = isCelsius ? 'C* F*' : 'F* C*';
+    });
+
     // Initial fetch on page load
     fetchHottestPlace();
-    document.addEventListener('scroll', () => {
+
+    // Show content when scrolling down
+    window.addEventListener('scroll', () => {
+      const content = document.getElementById('content');
       if (window.scrollY > 100) {
-        document.getElementById('content').style.display = 'flex';
+        content.style.display = 'flex';
+        content.style.opacity = 1;
       }
     });
   </script>
