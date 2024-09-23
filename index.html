@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hottest Place RN</title>
+  <title>hottest place rn</title>
   <style>
     * {
       margin: 0;
@@ -36,6 +36,7 @@
       text-align: center;
       display: flex;
       align-items: center;
+      text-transform: lowercase;
     }
 
     .edit-icon {
@@ -47,11 +48,13 @@
     .place {
       font-size: 2.5rem;
       margin-top: 2vh;
+      text-transform: lowercase;
     }
 
     .temperature {
       font-size: 2.5rem;
       margin-top: 1vh;
+      text-transform: lowercase;
     }
 
     #tempSwitch {
@@ -66,74 +69,138 @@
       background: rgba(0, 0, 0, 0.2);
       border: none;
       transition: opacity 0.5s ease;
+      text-transform: lowercase;
     }
 
-    /* Dropdown menu for region selection */
-    .region-select {
-      display: none;
-      position: absolute;
-      top: 50px;
-      background-color: white;
-      color: black;
-      border-radius: 5px;
+    /* Modal styling for region selection */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-content {
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal-header {
+      color: white;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .modal-select {
+      margin-bottom: 20px;
+    }
+
+    select {
+      width: 100%;
       padding: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      border: none;
+      background-color: #333;
+      color: white;
+      font-size: 1rem;
+      text-transform: lowercase;
     }
 
-    .region-select.active {
-      display: block;
+    .modal-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
     }
 
-    .region-select select {
-      padding: 5px;
+    .modal-buttons button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #333;
+      color: white;
+      cursor: pointer;
       font-size: 1rem;
     }
 
+    .modal-buttons button:hover {
+      background-color: #444;
+    }
   </style>
 </head>
 <body>
   <div id="tempSwitch">°C</div>
   <h1>
-    Hottest Place RN in the <span id="selectedRegion">World</span>
-    <img src="https://png.pngtree.com/element_our/20190528/ourmid/pngtree-black-edit-icon-image_1130448.jpg" alt="Edit" class="edit-icon" id="editIcon">
+    hottest place rn in <span id="selectedRegion">world</span>
+    <img src="https://png.pngtree.com/element_our/20190528/ourmid/pngtree-black-edit-icon-image_1130448.jpg" alt="edit" class="edit-icon" id="editIcon">
   </h1>
-  <div class="place" id="hottestPlaceDisplay">Loading place...</div>
-  <div class="temperature" id="temperatureDisplay">Loading temperature...</div>
+  <div class="place" id="hottestPlaceDisplay">loading place...</div>
+  <div class="temperature" id="temperatureDisplay">loading temperature...</div>
 
-  <!-- Region selection dropdown -->
-  <div class="region-select" id="regionSelect">
-    <select id="regionDropdown">
-      <option value="global">Global</option>
-      <option value="middle-east">Middle East</option>
-      <option value="north-america">North America</option>
-      <option value="africa">Africa</option>
-      <option value="asia">Asia</option>
-      <option value="europe">Europe</option>
-    </select>
-    <button id="confirmRegion">Confirm</button>
+  <!-- Modal for region selection -->
+  <div class="modal" id="regionModal">
+    <div class="modal-content">
+      <div class="modal-header">select a region</div>
+      <div class="modal-select">
+        <select id="regionDropdown">
+          <option value="global">global</option>
+          <option value="middle-east">middle east</option>
+          <option value="north-america">north america</option>
+          <option value="africa">africa</option>
+          <option value="asia">asia</option>
+          <option value="europe">europe</option>
+          <option value="south-america">south america</option>
+          <option value="australia">australia</option>
+        </select>
+      </div>
+      <div class="modal-buttons">
+        <button id="cancelRegion">cancel</button>
+        <button id="confirmRegion">confirm</button>
+      </div>
+    </div>
   </div>
 
   <script>
     const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Insert your OpenWeatherMap API key here
     const API_URL = 'https://api.openweathermap.org/data/2.5/weather?';
 
-    // Define regions with representative cities
+    // Define regions with more cities per region
     const regions = {
-      'global': ['Death Valley', 'Kuwait City', 'Sahara Desert', 'Baghdad', 'Dubai', 'Phoenix', 'Delhi'],
-      'middle-east': ['Kuwait City', 'Baghdad', 'Dubai', 'Riyadh', 'Doha'],
-      'north-america': ['Phoenix', 'Las Vegas', 'Death Valley', 'Dallas', 'Houston'],
-      'africa': ['Sahara Desert', 'Cairo', 'Nairobi', 'Lagos', 'Khartoum'],
-      'asia': ['Delhi', 'Bangkok', 'Jakarta', 'Manila', 'Karachi'],
-      'europe': ['Athens', 'Rome', 'Madrid', 'Paris', 'Lisbon']
+      'global': ['death valley', 'kuwait city', 'sahara desert', 'baghdad', 'dubai', 'phoenix', 'delhi', 'riyadh', 'las vegas'],
+      'middle-east': ['kuwait city', 'baghdad', 'dubai', 'riyadh', 'doha', 'muscat', 'abu dhabi', 'amman'],
+      'north-america': ['phoenix', 'las vegas', 'death valley', 'dallas', 'houston', 'los angeles', 'mexico city', 'new orleans'],
+      'africa': ['sahara desert', 'cairo', 'nairobi', 'lagos', 'khartoum', 'addis ababa', 'cape town', 'algiers'],
+      'asia': ['delhi', 'bangkok', 'jakarta', 'manila', 'karachi', 'mumbai', 'tokyo', 'singapore'],
+      'europe': ['athens', 'rome', 'madrid', 'paris', 'lisbon', 'seville', 'istanbul', 'milan'],
+      'south-america': ['buenos aires', 'rio de janeiro', 'lima', 'santiago', 'bogota', 'caracas', 'sao paulo'],
+      'australia': ['sydney', 'melbourne', 'perth', 'adelaide', 'brisbane', 'darwin', 'alice springs']
     };
 
     let isCelsius = true;
     let selectedRegion = 'global'; // Default region
 
     // Fetch weather data for a specific region
-    async function fetchWeatherData(city) {
+    async function fetchWeatherData(region) {
       const units = isCelsius ? "metric" : "imperial";
-      const response = await fetch(`${API_URL}q=${city}&appid=${API_KEY}&units=${units}`);
+      const response = await fetch(`${API_URL}q=${region}&appid=${API_KEY}&units=${units}`);
       if (!response.ok) throw new Error('Failed to fetch weather data');
       return await response.json();
     }
@@ -161,24 +228,30 @@
 
     // Update the hottest place and temperature on the webpage
     function updateDisplay(hottest) {
-      const temperature = `${hottest.temp.toFixed(1)}°${isCelsius ? 'C' : 'F'}`;
+      const temperature = `${hottest.temp.toFixed(1)}°${isCelsius ? 'c' : 'f'}`;
       document.getElementById('hottestPlaceDisplay').textContent = hottest.city;
-      document.getElementById('temperatureDisplay').textContent = `Temperature: ${temperature}`;
+      document.getElementById('temperatureDisplay').textContent = `temperature: ${temperature}`;
     }
 
     // Handle temperature unit switch
     const tempSwitch = document.getElementById('tempSwitch');
     tempSwitch.addEventListener('click', () => {
       isCelsius = !isCelsius;
-      tempSwitch.textContent = isCelsius ? '°C' : '°F';
+      tempSwitch.textContent = isCelsius ? '°c' : '°f';
       fetchHottestPlace(); // Re-fetch with updated unit
     });
 
-    // Show region selection dropdown when the edit icon is clicked
+    // Show modal when the edit icon is clicked
     const editIcon = document.getElementById('editIcon');
-    const regionSelect = document.getElementById('regionSelect');
+    const regionModal = document.getElementById('regionModal');
     editIcon.addEventListener('click', () => {
-      regionSelect.classList.toggle('active'); // Toggle dropdown visibility
+      regionModal.classList.add('active'); // Show modal
+    });
+
+    // Cancel and close modal
+    const cancelRegion = document.getElementById('cancelRegion');
+    cancelRegion.addEventListener('click', () => {
+      regionModal.classList.remove('active'); // Hide modal
     });
 
     // Confirm the selected region
@@ -186,8 +259,8 @@
     confirmRegion.addEventListener('click', () => {
       const selectedOption = document.getElementById('regionDropdown').value;
       selectedRegion = selectedOption; // Update the selected region
-      document.getElementById('selectedRegion').textContent = selectedOption.replace('-', ' ').toUpperCase();
-      regionSelect.classList.remove('active'); // Hide dropdown
+      document.getElementById('selectedRegion').textContent = selectedOption.replace('-', ' ').toLowerCase();
+      regionModal.classList.remove('active'); // Hide modal
       fetchHottestPlace(); // Fetch hottest place for the selected region
     });
 
