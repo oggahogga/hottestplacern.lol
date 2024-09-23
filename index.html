@@ -9,67 +9,39 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
     }
 
     body {
-      font-family: 'Arial', sans-serif;
-      color: white;
-      height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #ff0000;
-      animation: flashBackground 20s infinite alternate ease-in-out;
-    }
-
-    @keyframes flashBackground {
-      0% { background: #ff0000; }
-      25% { background: #ff4500; }
-      50% { background: #ff8c00; }
-      75% { background: #ffd700; }
-      100% { background: #ffff00; }
-    }
-
-    h1 {
-      font-size: 3rem;
-      text-align: center;
-      display: flex;
-      align-items: center;
+      height: 100vh;
+      background: #ffcc00; /* Adjusted to a consistent yellow background */
+      color: black; /* Better contrast */
+      font-size: 24px;
       text-transform: lowercase;
+    }
+
+    .container {
+      text-align: center;
     }
 
     .edit-icon {
-      margin-left: 10px;
       width: 25px;
       cursor: pointer;
+      display: block;
+      margin: 0 auto 20px;
     }
 
-    .place {
-      font-size: 2.5rem;
-      margin-top: 2vh;
-      text-transform: lowercase;
+    .place, .temperature, #selectedRegion {
+      display: block;
+      margin: 5px 0;
     }
 
-    .temperature {
-      font-size: 2.5rem;
-      margin-top: 1vh;
-      text-transform: lowercase;
-    }
-
-    #tempSwitch {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-      font-size: 1.5rem;
-      padding: 5px 15px;
-      border-radius: 5px;
-      color: white;
-      background: rgba(0, 0, 0, 0.2);
-      border: none;
-      transition: opacity 0.5s ease;
-      text-transform: lowercase;
+    #selectedRegion {
+      font-size: 0.75em;
+      color: #666; /* Lighter text for less emphasis */
     }
 
     /* Modal styling for region selection */
@@ -80,18 +52,14 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.9);
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: center;
-      z-index: 999;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
+      z-index: 10;
     }
 
     .modal.active {
-      opacity: 1;
-      pointer-events: all;
+      display: flex;
     }
 
     .modal-content {
@@ -103,86 +71,53 @@
       text-align: center;
     }
 
-    .modal-header {
-      color: white;
-      font-size: 1.5rem;
-      margin-bottom: 20px;
-    }
-
-    .modal-select {
-      margin-bottom: 20px;
-    }
-
-    select {
+    select, button {
       width: 100%;
       padding: 10px;
+      margin-top: 10px;
       border-radius: 5px;
       border: none;
-      background-color: #333;
-      color: white;
-      font-size: 1rem;
-      text-transform: lowercase;
-    }
-
-    .modal-buttons {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .modal-buttons button {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
       background-color: #333;
       color: white;
       cursor: pointer;
       font-size: 1rem;
     }
 
-    .modal-buttons button:hover {
+    button:hover {
       background-color: #444;
     }
   </style>
 </head>
 <body>
-  <div id="tempSwitch">°C</div>
-  <h1>
+  <div class="container">
     <img src="https://github.com/oggahogga/hottestplacern.lol/blob/fe0e4da78efd658925cdad7b0146843479b71356/image-removebg-preview%20(3).png?raw=true" alt="edit" class="edit-icon" id="editIcon">
-  </h1>
-  <div class="place" id="hottestPlaceDisplay">loading place...</div>
-  <div class="temperature" id="temperatureDisplay">loading temperature...</div>
-    hottest place rn <span id="selectedRegion">world</span>
+    <span class="place" id="hottestPlaceDisplay">loading place...</span>
+    <span class="temperature" id="temperatureDisplay">loading temperature...</span>
+    <span id="selectedRegion">hottest place rn north america</span>
+  </div>
 
   <!-- Modal for region selection -->
   <div class="modal" id="regionModal">
     <div class="modal-content">
       <div class="modal-header">select a region</div>
-      <div class="modal-select">
-        <select id="regionDropdown">
-          <option value="global">global</option>
-          <option value="middle-east">middle east</option>
-          <option value="north-america">north america</option>
-          <option value="africa">africa</option>
-          <option value="asia">asia</option>
-          <option value="europe">europe</option>
-          <option value="south-america">south america</option>
-          <option value="australia">australia</option>
-        </select>
-      </div>
-      <div class="modal-buttons">
-        <button id="cancelRegion">cancel</button>
-        <button id="confirmRegion">confirm</button>
-      </div>
+      <select id="regionDropdown">
+        <option value="global">global</option>
+        <option value="middle-east">middle east</option>
+        <option value="north-america">north america</option>
+        <option value="africa">africa</option>
+        <option value="asia">asia</option>
+        <option value="europe">europe</option>
+        <option value="south-america">south america</option>
+        <option value="australia">australia</option>
+      </select>
+      <button id="cancelRegion">cancel</button>
+      <button id="confirmRegion">confirm</button>
     </div>
   </div>
 
   <script>
     const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Insert your OpenWeatherMap API key here
     const API_URL = 'https://api.openweathermap.org/data/2.5/weather?';
-
-    // Define regions with more cities per region
     const regions = {
       'global': ['death valley', 'kuwait city', 'sahara desert', 'baghdad', 'dubai', 'phoenix', 'delhi', 'riyadh', 'las vegas'],
       'middle-east': ['kuwait city', 'baghdad', 'dubai', 'riyadh', 'doha', 'muscat', 'abu dhabi', 'amman'],
@@ -193,23 +128,19 @@
       'south-america': ['buenos aires', 'rio de janeiro', 'lima', 'santiago', 'bogota', 'caracas', 'sao paulo'],
       'australia': ['sydney', 'melbourne', 'perth', 'adelaide', 'brisbane', 'darwin', 'alice springs']
     };
-
     let isCelsius = true;
     let selectedRegion = 'global'; // Default region
 
-    // Fetch weather data for a specific region
-    async function fetchWeatherData(region) {
+    async function fetchWeatherData(city) {
       const units = isCelsius ? "metric" : "imperial";
-      const response = await fetch(`${API_URL}q=${region}&appid=${API_KEY}&units=${units}`);
+      const response = await fetch(`${API_URL}q=${city}&appid=${API_KEY}&units=${units}`);
       if (!response.ok) throw new Error('Failed to fetch weather data');
       return await response.json();
     }
 
-    // Find the hottest place in the selected region
     async function fetchHottestPlace() {
       const cities = regions[selectedRegion];
       let hottest = { city: '', temp: -Infinity };
-
       for (const city of cities) {
         try {
           const data = await fetchWeatherData(city);
@@ -226,45 +157,32 @@
       updateDisplay(hottest);
     }
 
-    // Update the hottest place and temperature on the webpage
     function updateDisplay(hottest) {
       const temperature = `${hottest.temp.toFixed(1)}°${isCelsius ? 'c' : 'f'}`;
       document.getElementById('hottestPlaceDisplay').textContent = hottest.city;
       document.getElementById('temperatureDisplay').textContent = `temperature: ${temperature}`;
     }
 
-    // Handle temperature unit switch
-    const tempSwitch = document.getElementById('tempSwitch');
-    tempSwitch.addEventListener('click', () => {
-      isCelsius = !isCelsius;
-      tempSwitch.textContent = isCelsius ? '°c' : '°f';
-      fetchHottestPlace(); // Re-fetch with updated unit
-    });
-
-    // Show modal when the edit icon is clicked
     const editIcon = document.getElementById('editIcon');
     const regionModal = document.getElementById('regionModal');
     editIcon.addEventListener('click', () => {
-      regionModal.classList.add('active'); // Show modal
+      regionModal.classList.add('active');
     });
 
-    // Cancel and close modal
     const cancelRegion = document.getElementById('cancelRegion');
     cancelRegion.addEventListener('click', () => {
-      regionModal.classList.remove('active'); // Hide modal
+      regionModal.classList.remove('active');
     });
 
-    // Confirm the selected region
     const confirmRegion = document.getElementById('confirmRegion');
     confirmRegion.addEventListener('click', () => {
       const selectedOption = document.getElementById('regionDropdown').value;
-      selectedRegion = selectedOption; // Update the selected region
-      document.getElementById('selectedRegion').textContent = selectedOption.replace('-', ' ').toLowerCase();
-      regionModal.classList.remove('active'); // Hide modal
-      fetchHottestPlace(); // Fetch hottest place for the selected region
+      selectedRegion = selectedOption;
+      document.getElementById('selectedRegion').textContent = 'hottest place rn ' + selectedOption.replace('-', ' ').toLowerCase();
+      regionModal.classList.remove('active');
+      fetchHottestPlace();
     });
 
-    // Initial fetch on page load
     fetchHottestPlace();
   </script>
 </body>
