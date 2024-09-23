@@ -10,115 +10,90 @@
       padding: 0;
       box-sizing: border-box;
     }
+
     body {
       font-family: Arial, sans-serif;
-      text-transform: lowercase;
-      background: linear-gradient(135deg, red, orange, yellow);
-      animation: fireBackground 10s infinite alternate;
+      text-align: center;
       color: white;
       height: 100vh;
       overflow: hidden;
+      animation: flashBackground 3s infinite alternate;
     }
-    @keyframes fireBackground {
+
+    @keyframes flashBackground {
       0% { background-color: red; }
-      33% { background-color: orange; }
-      66% { background-color: yellow; }
-      100% { background-color: red; }
+      50% { background-color: orange; }
+      100% { background-color: yellow; }
     }
-    .header {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      padding: 20px 30px;
-      display: flex;
-      justify-content: space-between;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 10;
-    }
-    .toggle {
-      cursor: pointer;
-      padding: 8px 16px;
-      border-radius: 20px;
-      background-color: rgba(255, 255, 255, 0.2);
-    }
-    .toggle:hover {
-      background-color: rgba(255, 255, 255, 0.4);
-    }
-    .content {
-      padding-top: 100px;
+
+    .main {
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
       height: 100%;
-      overflow-y: auto;
-      scrollbar-width: thin;
-    }
-    .hottest-place {
-      font-size: 2rem;
-      margin-top: 5vh;
-      opacity: 1;
-      transition: opacity 0.5s;
-    }
-    .days {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      align-items: center;
       opacity: 1;
       transition: opacity 1s ease-in-out;
     }
+
+    .hottest-place {
+      font-size: 3rem;
+      margin-top: 20vh;
+      opacity: 1;
+    }
+
+    .content {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 50px;
+      transition: opacity 1s ease-in-out;
+    }
+
     .day {
       cursor: pointer;
       padding: 10px 20px;
       border: 2px solid white;
       border-radius: 10px;
       margin: 10px 0;
-      width: 80%;
-      max-width: 600px;
-      background-color: rgba(0, 0, 0, 0.5);
+      background-color: rgba(255, 255, 255, 0.1);
       transition: background-color 0.3s;
     }
-    .day:hover, .day.active {
-      background-color: rgba(255, 255, 255, 0.2);
+
+    .day:hover {
+      background-color: rgba(255, 255, 255, 0.3);
     }
+
     .timeline {
-      display: none;
-      width: 80%;
-      max-width: 600px;
+      margin-top: 20px;
       padding: 20px;
+      border: 1px solid white;
       border-radius: 10px;
       background-color: rgba(0, 0, 0, 0.5);
-      margin-bottom: 20px;
+      display: none;
     }
+
     .timeline.show {
       display: block;
-    }
-    .timeline div {
-      margin-bottom: 10px;
-      cursor: pointer;
-    }
-    .timeline div:hover {
-      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>hottest place rn</h1>
-    <div class="toggle" id="tempToggle">show in °F</div>
-  </div>
-  <div class="content">
+  <div class="main">
     <div class="hottest-place" id="hottestPlaceDisplay">
       <p>fetching hottest place...</p>
     </div>
-    <h2>Past Days</h2>
-    <div class="days" id="daysContainer">
-      <!-- Days are dynamically inserted here -->
+    <div class="content" id="content">
+      <h2>Past Days</h2>
+      <div class="day" data-day="today">Today</div>
+      <div class="day" data-day="yesterday">Yesterday</div>
+      <div class="day" data-day="two days ago">Two Days Ago</div>
+      <div id="timelineContainer"></div>
     </div>
   </div>
 
   <script>
-    const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Insert your API key
+    const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Insert your OpenWeatherMap API key
     const API_URL = 'https://api.openweathermap.org/data/2.5/weather?q=';
     const cities = ['Death Valley', 'Sahara Desert', 'Dubai', 'Phoenix', 'Kuwait City', 'Baghdad', 'Delhi'];
     let isCelsius = true;
@@ -151,38 +126,22 @@
     function updateHottestPlace(hottest) {
       const temperature = isCelsius ? `${hottest.temp}°C` : `${(hottest.temp * 9/5 + 32).toFixed(1)}°F`;
       document.getElementById('hottestPlaceDisplay').innerHTML = `
-        <p>hottest place right now is ${hottest.city}</p>
-        <p>temperature: ${temperature} at ${hottest.time}</p>
+        <p>hottest place rn: ${hottest.city}</p>
+        <p>temperature: ${temperature}</p>
       `;
     }
 
-    document.getElementById('tempToggle').addEventListener('click', () => {
-      isCelsius = !isCelsius;
-      document.getElementById('tempToggle').innerText = isCelsius ? 'show in °F' : 'show in °C';
-      fetchHottestPlace(); // Re-fetch data to reflect the temperature unit change
+    document.querySelectorAll('.day').forEach(dayElem => {
+      dayElem.addEventListener('click', () => {
+        const day = dayElem.getAttribute('data-day');
+        toggleTimeline(day, dayElem);
+      });
     });
 
-    function createDays() {
-      const days = ['today', 'yesterday', 'two days ago'];
-      const container = document.getElementById('daysContainer');
-      days.forEach(day => {
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'day';
-        dayDiv.textContent = day;
-        dayDiv.setAttribute('data-day', day);
-        dayDiv.onclick = () => toggleTimeline(day, dayDiv);
-        container.appendChild(dayDiv);
-      });
-    }
+    function toggleTimeline(day, dayElem) {
+      const previousTimeline = document.querySelector('.timeline.show');
+      if (previousTimeline) previousTimeline.classList.remove('show');
 
-    function toggleTimeline(day, dayDiv) {
-      const previouslyActive = document.querySelector('.day.active');
-      if (previouslyActive) {
-        previouslyActive.classList.remove('active');
-        const previousTimeline = document.querySelector('.timeline.show');
-        if (previousTimeline) previousTimeline.classList.remove('show');
-      }
-      dayDiv.classList.add('active');
       const timelineData = [
         { time: '12:00 am', location: 'Sahara Desert', temperature: isCelsius ? '45°C' : '113°F' },
         { time: '3:00 am', location: 'Death Valley', temperature: isCelsius ? '47°C' : '116°F' },
@@ -193,15 +152,20 @@
         { time: '6:00 pm', location: 'Arabian Desert', temperature: isCelsius ? '48°C' : '118.4°F' },
         { time: '9:00 pm', location: 'Gobi Desert', temperature: isCelsius ? '43°C' : '109.4°F' }
       ];
+      
       const timeline = document.createElement('div');
       timeline.className = 'timeline show';
       timeline.innerHTML = timelineData.map(entry => `<div>${entry.time} - ${entry.location}: ${entry.temperature}</div>`).join('');
-      dayDiv.after(timeline);
+      dayElem.after(timeline);
     }
 
-    // Initialize data and UI
-    createDays();
+    // Initial fetch on page load
     fetchHottestPlace();
+    document.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        document.getElementById('content').style.display = 'flex';
+      }
+    });
   </script>
 </body>
 </html>
