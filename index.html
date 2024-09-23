@@ -14,11 +14,11 @@
     body {
       font-family: Arial, sans-serif;
       color: white;
-      height: 100vh;
-      overflow-y: auto;
-      scroll-behavior: smooth;
+      min-height: 200vh; /* Ensure there's enough content for scrolling */
       background: linear-gradient(135deg, red, orange, yellow);
+      background-attachment: fixed;
       animation: flashBackground 3s infinite alternate;
+      scroll-behavior: smooth;
     }
 
     @keyframes flashBackground {
@@ -32,7 +32,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      height: 100vh;
       transition: opacity 1s ease-in-out;
     }
 
@@ -83,25 +83,18 @@
       top: 10px;
       right: 10px;
       cursor: pointer;
-      padding: 5px 15px;
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       border: none;
       color: white;
       background: none;
-      text-align: center;
-      transition: opacity 0.5s ease-in-out;
+      transition: opacity 0.5s ease;
     }
 
-    #tempSwitch:hover {
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    .fade {
+    #tempSwitch.fade {
       opacity: 0;
-      transition: opacity 0.5s;
     }
 
-    .fade.show {
+    #tempSwitch.show {
       opacity: 1;
     }
   </style>
@@ -192,13 +185,18 @@
     // Toggle temperature between Celsius and Fahrenheit
     document.getElementById('tempSwitch').addEventListener('click', () => {
       isCelsius = !isCelsius;
-      document.getElementById('tempSwitch').classList.remove('show'); // Fade out
-      setTimeout(() => {
-        fetchHottestPlace();
-        document.getElementById('tempSwitch').textContent = isCelsius ? 'C' : 'F';
-        document.getElementById('tempSwitch').classList.add('show'); // Fade in
-      }, 500); // Delay for fade out before changing text
+      fetchHottestPlace();
+      toggleTempSwitch();
     });
+
+    function toggleTempSwitch() {
+      const tempSwitch = document.getElementById('tempSwitch');
+      tempSwitch.classList.add('fade');
+      setTimeout(() => {
+        tempSwitch.textContent = isCelsius ? 'C' : 'F';
+        tempSwitch.classList.remove('fade');
+      }, 500); // Time for the fade effect
+    }
 
     // Initial fetch on page load
     fetchHottestPlace();
