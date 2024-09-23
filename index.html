@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>hottest place rn</title>
+  <title>Hottest Place RN</title>
   <style>
     * {
       margin: 0;
@@ -12,24 +12,19 @@
     }
 
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       text-transform: lowercase;
-      text-align: center;
       color: white;
+      background: linear-gradient(135deg, red, orange, yellow);
+      animation: fireBackground 10s infinite alternate;
       overflow-x: hidden;
-      background-color: black;
     }
 
-    /* flashing fire-like background */
     @keyframes fireBackground {
       0% { background-color: red; }
       33% { background-color: orange; }
       66% { background-color: yellow; }
       100% { background-color: red; }
-    }
-
-    body {
-      animation: fireBackground 10s infinite alternate;
     }
 
     .header {
@@ -38,18 +33,14 @@
       width: 100%;
       display: flex;
       justify-content: space-between;
-      padding: 20px;
+      padding: 15px 30px;
+      background: rgba(0, 0, 0, 0.5);
       z-index: 100;
-      background: rgba(0, 0, 0, 0.6);
-    }
-
-    .header h1 {
-      font-size: 2.5rem;
     }
 
     .toggle {
       cursor: pointer;
-      padding: 10px 20px;
+      padding: 10px 15px;
       border-radius: 20px;
       background-color: rgba(255, 255, 255, 0.2);
       transition: background-color 0.3s;
@@ -59,40 +50,39 @@
       background-color: rgba(255, 255, 255, 0.4);
     }
 
-    /* Smooth transition for showing and hiding content */
     .content {
-      padding-top: 150px;
+      padding-top: 100px;
+      text-align: center;
       transition: opacity 1s ease-in-out;
     }
 
     .hottest-place {
-      font-size: 4rem;
-      margin-top: 50vh;
-      transition: transform 0.5s, opacity 0.5s;
-      opacity: 1;
-    }
-
-    .hidden {
+      font-size: 3rem;
+      margin: 20vh 0 10px;
       opacity: 0;
       transform: translateY(20px);
+      transition: transform 0.5s, opacity 0.5s;
     }
 
     .days {
-      opacity: 0;
-      margin-top: 50px;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      align-items: center;
+      opacity: 0;
       transition: opacity 1s ease-in-out;
+      margin-top: 20px;
     }
 
     .day {
       cursor: pointer;
-      padding: 15px;
+      padding: 10px;
       border: 2px solid white;
       border-radius: 5px;
       background-color: rgba(0, 0, 0, 0.5);
       transition: background-color 0.3s;
+      margin: 5px;
+      width: 150px;
+      text-align: center;
     }
 
     .day:hover {
@@ -100,13 +90,13 @@
     }
 
     .timeline {
-      display: none;
       margin-top: 20px;
       padding: 10px;
       border: 1px solid white;
       border-radius: 5px;
       background-color: rgba(0, 0, 0, 0.5);
       text-align: left;
+      display: none;
     }
 
     .timeline div {
@@ -117,64 +107,56 @@
     .timeline div:hover {
       text-decoration: underline;
     }
-
-    /* Smooth scrolling */
-    html {
-      scroll-behavior: smooth;
-    }
   </style>
 </head>
 <body>
-  <!-- Header with Fahrenheit/Celsius Toggle -->
   <div class="header">
     <h1>hottest place rn</h1>
-    <div class="toggle" id="tempToggle">show in °f</div>
+    <div class="toggle" id="tempToggle">show in °F</div>
   </div>
 
-  <!-- Main content -->
   <div class="content">
     <div class="hottest-place" id="hottestPlaceDisplay">
       <p>fetching hottest place...</p>
     </div>
 
-    <h2 style="margin-top: 50px;">past days</h2>
-    <div class="days">
-      <div class="day" data-day="2024-09-22">today</div>
-      <div class="day" data-day="2024-09-21">yesterday</div>
-      <div class="day" data-day="2024-09-20">two days ago</div>
-      <!-- add more days as needed -->
+    <h2>past days</h2>
+    <div class="days" id="daysContainer">
+      <div class="day" data-day="today">today</div>
+      <div class="day" data-day="yesterday">yesterday</div>
+      <div class="day" data-day="two days ago">two days ago</div>
     </div>
     <div id="timelineContainer"></div>
   </div>
 
   <script>
-    const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // replace with your OpenWeatherMap API key
+    const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Replace with your OpenWeatherMap API key
     const API_URL = 'https://api.openweathermap.org/data/2.5/weather?q=';
     const cities = ['Death Valley', 'Sahara Desert', 'Dubai', 'Phoenix', 'Kuwait City', 'Baghdad', 'Delhi'];
 
-    let isCelsius = true; // Toggle state for Celsius/Fahrenheit
-    const hottestPlaceDisplay = document.getElementById('hottestPlaceDisplay');
-    const tempToggle = document.getElementById('tempToggle');
+    let isCelsius = true;
 
-    // Fetch weather data
     async function fetchWeatherData(city) {
       const response = await fetch(`${API_URL}${city}&appid=${API_KEY}&units=metric`);
-      const data = await response.json();
-      return data;
+      if (!response.ok) throw new Error('Failed to fetch weather data');
+      return await response.json();
     }
 
     async function fetchHottestPlace() {
       let hottest = { city: '', temp: -Infinity, time: '' };
 
-      // Loop through cities and find the hottest one
-      for (let city of cities) {
-        const data = await fetchWeatherData(city);
-        if (data.main.temp > hottest.temp) {
-          hottest = {
-            city: data.name,
-            temp: data.main.temp,
-            time: new Date(data.dt * 1000).toLocaleTimeString(),
-          };
+      for (const city of cities) {
+        try {
+          const data = await fetchWeatherData(city);
+          if (data.main.temp > hottest.temp) {
+            hottest = {
+              city: data.name,
+              temp: data.main.temp,
+              time: new Date(data.dt * 1000).toLocaleTimeString(),
+            };
+          }
+        } catch (error) {
+          console.error(error);
         }
       }
 
@@ -182,47 +164,41 @@
     }
 
     function updateHottestPlace(hottest) {
-      // Convert temperature if in Fahrenheit
       const temperature = isCelsius ? `${hottest.temp}°C` : `${(hottest.temp * 9/5 + 32).toFixed(1)}°F`;
-      hottestPlaceDisplay.innerHTML = `
+      document.getElementById('hottestPlaceDisplay').innerHTML = `
         <p>hottest place right now is ${hottest.city}</p>
         <p>temperature: ${temperature} at ${hottest.time}</p>
       `;
+
+      // Trigger entrance animation
+      document.getElementById('hottestPlaceDisplay').style.opacity = 1;
+      document.getElementById('hottestPlaceDisplay').style.transform = 'translateY(0)';
+      document.getElementById('daysContainer').style.opacity = 1;
     }
 
-    // Toggle between Celsius and Fahrenheit
-    tempToggle.addEventListener('click', () => {
+    document.getElementById('tempToggle').addEventListener('click', () => {
       isCelsius = !isCelsius;
-      tempToggle.innerText = isCelsius ? 'show in °f' : 'show in °c';
-      fetchHottestPlace(); // Re-fetch data to reflect the temperature unit
+      document.getElementById('tempToggle').innerText = isCelsius ? 'show in °F' : 'show in °C';
+      fetchHottestPlace();
     });
 
-    // Fetch the hottest place on page load
-    fetchHottestPlace();
-
-    // Scroll to show more content
-    window.addEventListener('scroll', () => {
-      const daysSection = document.querySelector('.days');
-      if (window.scrollY > 100) {
-        hottestPlaceDisplay.classList.add('hidden');
-        daysSection.style.opacity = 1;
-      } else {
-        hottestPlaceDisplay.classList.remove('hidden');
-        daysSection.style.opacity = 0;
-      }
+    document.querySelectorAll('.day').forEach(dayElem => {
+      dayElem.addEventListener('click', () => {
+        const day = dayElem.getAttribute('data-day');
+        fetchPastData(day);
+      });
     });
 
-    // Mock function to display past data for simplicity
     async function fetchPastData(day) {
       const pastData = [
-        { time: '12:00 am', location: 'Sahara Desert', temperature: '45°C' },
-        { time: '3:00 am', location: 'Death Valley', temperature: '47°C' },
-        { time: '6:00 am', location: 'Gobi Desert', temperature: '42°C' },
-        { time: '9:00 am', location: 'Sahara Desert', temperature: '49°C' },
-        { time: '12:00 pm', location: 'Death Valley', temperature: '54°C' },
-        { time: '3:00 pm', location: 'Namib Desert', temperature: '50°C' },
-        { time: '6:00 pm', location: 'Arabian Desert', temperature: '48°C' },
-        { time: '9:00 pm', location: 'Gobi Desert', temperature: '43°C' }
+        { time: '12:00 am', location: 'Sahara Desert', temperature: isCelsius ? '45°C' : '113°F' },
+        { time: '3:00 am', location: 'Death Valley', temperature: isCelsius ? '47°C' : '116°F' },
+        { time: '6:00 am', location: 'Gobi Desert', temperature: isCelsius ? '42°C' : '107.6°F' },
+        { time: '9:00 am', location: 'Sahara Desert', temperature: isCelsius ? '49°C' : '120.2°F' },
+        { time: '12:00 pm', location: 'Death Valley', temperature: isCelsius ? '54°C' : '129.2°F' },
+        { time: '3:00 pm', location: 'Namib Desert', temperature: isCelsius ? '50°C' : '122°F' },
+        { time: '6:00 pm', location: 'Arabian Desert', temperature: isCelsius ? '48°C' : '118.4°F' },
+        { time: '9:00 pm', location: 'Gobi Desert', temperature: isCelsius ? '43°C' : '109.4°F' }
       ];
 
       const timelineContainer = document.getElementById('timelineContainer');
@@ -233,18 +209,12 @@
           `).join('')}
         </div>
       `;
-
       timelineContainer.innerHTML = timelineHTML;
       document.querySelector(`#timeline-${day}`).style.display = 'block';
     }
 
-    document.querySelectorAll('.day').forEach(dayElem => {
-      dayElem.addEventListener('click', () => {
-        const day = dayElem.getAttribute('data-day');
-        fetchPastData(day);
-      });
-    });
-
+    // Initial fetch on page load
+    fetchHottestPlace();
   </script>
 </body>
 </html>
