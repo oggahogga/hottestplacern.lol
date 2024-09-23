@@ -18,6 +18,10 @@
       background: linear-gradient(135deg, red, orange, yellow);
       animation: flashBackground 3s infinite alternate;
       background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     @keyframes flashBackground {
@@ -26,16 +30,20 @@
       100% { background-color: yellow; }
     }
 
-    .main {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
+    h1 {
+      margin-top: 10vh;
+      font-size: 2.5rem;
+      text-align: center;
     }
 
-    .hottest-place {
-      font-size: 3rem;
+    .place {
+      font-size: 2rem;
+      margin-top: 20px;
+    }
+
+    .temperature {
+      font-size: 2rem;
+      margin-top: 10px;
     }
 
     #tempSwitch {
@@ -60,17 +68,15 @@
     .fade-in {
       opacity: 1;
       transition: opacity 0.25s ease;
-      transition-delay: 0.25s; /* Wait for fade-out to finish */
+      transition-delay: 0.25s;
     }
   </style>
 </head>
 <body>
   <div id="tempSwitch">°C</div>
-  <div class="main">
-    <div class="hottest-place" id="hottestPlaceDisplay">
-      <p>fetching hottest place...</p>
-    </div>
-  </div>
+  <h1>Hottest Place RN</h1>
+  <div class="place" id="hottestPlaceDisplay">Loading place...</div>
+  <div class="temperature" id="temperatureDisplay">Loading temperature...</div>
 
   <script>
     const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Replace with your real API key
@@ -100,15 +106,13 @@
           console.error(error);
         }
       }
-      updateHottestPlace(hottest);
+      updateDisplay(hottest);
     }
 
-    function updateHottestPlace(hottest) {
+    function updateDisplay(hottest) {
       const temperature = `${hottest.temp.toFixed(1)}°${isCelsius ? 'C' : 'F'}`;
-      document.getElementById('hottestPlaceDisplay').innerHTML = `
-        <p>Hottest place right now: ${hottest.city}</p>
-        <p>Temperature: ${temperature}</p>
-      `;
+      document.getElementById('hottestPlaceDisplay').textContent = hottest.city;
+      document.getElementById('temperatureDisplay').textContent = `Temperature: ${temperature}`;
     }
 
     const tempSwitch = document.getElementById('tempSwitch');
