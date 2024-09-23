@@ -56,7 +56,6 @@
       transition: opacity 1s ease-in-out;
     }
 
-    /* Cleaner day button */
     .day {
       cursor: pointer;
       padding: 15px 25px;
@@ -74,42 +73,44 @@
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
     }
 
-    /* Apple Weather App style timeline */
-    .timeline {
-      margin-top: 20px;
-      padding: 20px;
-      border-radius: 12px;
-      background-color: rgba(0, 0, 0, 0.5);
+    /* Modal (popup) for timeline */
+    .modal {
       display: none;
+      position: fixed;
+      z-index: 10;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: rgba(0, 0, 0, 0.9);
+      padding: 20px;
+      border-radius: 15px;
       width: 90%;
-      max-width: 500px;
+      max-width: 400px;
+      text-align: center;
+      color: white;
+      animation: fadeIn 0.5s;
     }
 
-    .timeline.show {
-      display: block;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
-    .timeline-entry {
-      display: flex;
-      justify-content: space-between;
-      padding: 15px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .timeline-entry:last-child {
-      border-bottom: none;
-    }
-
-    .timeline-time {
-      font-size: 1.2rem;
-    }
-
-    .timeline-location {
-      font-size: 1rem;
-    }
-
-    .timeline-temperature {
-      font-size: 1.2rem;
+    .close-modal {
+      cursor: pointer;
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 10px;
+      border-radius: 50%;
+      position: absolute;
+      top: 10px;
+      right: 20px;
     }
 
     #tempSwitch {
@@ -151,78 +152,85 @@
     </div>
   </div>
 
+  <!-- Modal for showing the timeline -->
+  <div class="modal" id="modal">
+    <div class="modal-content" id="modalContent">
+      <span class="close-modal" id="closeModal">&times;</span>
+      <h3 id="modalTitle">Past Day Timeline</h3>
+      <div id="modalTimeline"></div>
+    </div>
+  </div>
+
   <script>
-    const API_KEY = 'your_api_key_here'; // Insert your OpenWeatherMap API key
-    const API_URL = 'https://api.openweathermap.org/data/2.5/weather?q=';
-    const cities = ['Death Valley', 'Sahara Desert', 'Dubai', 'Phoenix', 'Kuwait City', 'Baghdad', 'Delhi'];
+    const API_KEY = '639a9d9405836e20490358fb8d985a2a'; // Insert your OpenWeatherMap API key
+    const API_URL = 'https://api.openweathermap.org/data/2.5/onecall/timemachine';
+    const locationData = { lat: 36.4623, lon: -116.8656 }; // Example: Death Valley
     let isCelsius = true;
 
-    async function fetchWeatherData(city) {
-      const response = await fetch(`${API_URL}${city}&appid=${API_KEY}&units=metric`);
+    async function fetchWeatherDataForPastDays(dayOffset) {
+      const unixTime = Math.floor((Date.now() / 1000) - (dayOffset * 86400)); // Past day's timestamp
+      const response = await fetch(`${API_URL}?lat=${locationData.lat}&lon=${locationData.lon}&dt=${unixTime}&appid=${API_KEY}&units=metric`);
       if (!response.ok) throw new Error('Failed to fetch weather data');
       return await response.json();
     }
 
     async function fetchHottestPlace() {
-      let hottest = { city: '', temp: -Infinity, time: '' };
-      for (const city of cities) {
-        try {
-          const data = await fetchWeatherData(city);
-          if (data.main.temp > hottest.temp) {
-            hottest = {
-              city: data.name,
-              temp: data.main.temp,
-              time: new Date(data.dt * 1000).toLocaleTimeString(),
-            };
-          }
-        } catch (error) {
-          console.error(error);
-        }
+      try {
+        const data = await fetchWeatherDataForPastDays(0);
+        const hottest = data.current;
+        updateHottestPlace(hottest);
+      } catch (error) {
+        console.error(error);
       }
-      updateHottestPlace(hottest);
     }
 
     function updateHottestPlace(hottest) {
       const temperature = isCelsius ? `${hottest.temp}°C` : `${(hottest.temp * 9/5 + 32).toFixed(1)}°F`;
       document.getElementById('hottestPlaceDisplay').innerHTML = `
-        <p>hottest place rn: ${hottest.city}</p>
+        <p>hottest place rn: Death Valley</p>
         <p>temperature: ${temperature}</p>
       `;
     }
 
     document.querySelectorAll('.day').forEach(dayElem => {
-      dayElem.addEventListener('click', () => {
+      dayElem.addEventListener('click', async () => {
         const day = dayElem.getAttribute('data-day');
-        toggleTimeline(day, dayElem);
+        const dayOffset = getDayOffset(day);
+        try {
+          const data = await fetchWeatherDataForPastDays(dayOffset);
+          showModal(data, day);
+        } catch (error) {
+          console.error(error);
+        }
       });
     });
 
-    function toggleTimeline(day, dayElem) {
-      const previousTimeline = document.querySelector('.timeline.show');
-      if (previousTimeline) previousTimeline.classList.remove('show');
-
-      const timelineData = [
-        { time: '12:00 am', location: 'Sahara Desert', temperature: isCelsius ? '45°C' : '113°F' },
-        { time: '3:00 am', location: 'Death Valley', temperature: isCelsius ? '47°C' : '116°F' },
-        { time: '6:00 am', location: 'Gobi Desert', temperature: isCelsius ? '42°C' : '107.6°F' },
-        { time: '9:00 am', location: 'Sahara Desert', temperature: isCelsius ? '49°C' : '120.2°F' },
-        { time: '12:00 pm', location: 'Death Valley', temperature: isCelsius ? '54°C' : '129.2°F' },
-        { time: '3:00 pm', location: 'Namib Desert', temperature: isCelsius ? '50°C' : '122°F' },
-        { time: '6:00 pm', location: 'Arabian Desert', temperature: isCelsius ? '48°C' : '118.4°F' },
-        { time: '9:00 pm', location: 'Gobi Desert', temperature: isCelsius ? '43°C' : '109.4°F' }
-      ];
-
-      const timeline = document.createElement('div');
-      timeline.className = 'timeline show';
-      timeline.innerHTML = timelineData.map(entry => `
-        <div class="timeline-entry">
-          <span class="timeline-time">${entry.time}</span>
-          <span class="timeline-location">${entry.location}</span>
-          <span class="timeline-temperature">${entry.temperature}</span>
-        </div>
-      `).join('');
-      dayElem.after(timeline);
+    function getDayOffset(day) {
+      switch (day) {
+        case 'today': return 0;
+        case 'yesterday': return 1;
+        case 'two days ago': return 2;
+        default: return 0;
+      }
     }
+
+    function showModal(data, day) {
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalTimeline = document.getElementById('modalTimeline');
+
+      modalTitle.textContent = `Temperature Timeline for ${day}`;
+      modalTimeline.innerHTML = `
+        <p>Time: ${new Date(data.current.dt * 1000).toLocaleTimeString()}</p>
+        <p>Temperature: ${isCelsius ? data.current.temp + '°C' : (data.current.temp * 9/5 + 32).toFixed(1) + '°F'}</p>
+      `;
+
+      modal.style.display = 'flex';
+    }
+
+    document.getElementById('closeModal').addEventListener('click', () => {
+      document.getElementById('modal').style.display = 'none';
+    });
 
     // Toggle temperature between Celsius and Fahrenheit
     document.getElementById('tempSwitch').addEventListener('click', () => {
