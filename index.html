@@ -51,10 +51,21 @@
       border: none;
       transition: opacity 0.5s ease;
     }
+
+    .fade-out {
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .fade-in {
+      opacity: 1;
+      transition: opacity 0.25s ease;
+      transition-delay: 0.25s; /* Wait for fade-out to finish */
+    }
   </style>
 </head>
 <body>
-  <div id="tempSwitch">C</div>
+  <div id="tempSwitch">°C</div>
   <div class="main">
     <div class="hottest-place" id="hottestPlaceDisplay">
       <p>fetching hottest place...</p>
@@ -68,7 +79,8 @@
     let isCelsius = true;
 
     async function fetchWeatherData(city) {
-      const response = await fetch(`${API_URL}q=${city}&appid=${API_KEY}&units=metric`);
+      const units = isCelsius ? "metric" : "imperial";
+      const response = await fetch(`${API_URL}q=${city}&appid=${API_KEY}&units=${units}`);
       if (!response.ok) throw new Error('Failed to fetch weather data');
       return await response.json();
     }
@@ -92,15 +104,25 @@
     }
 
     function updateHottestPlace(hottest) {
-      const temperature = isCelsius ? `${hottest.temp}°C` : `${(hottest.temp * 9/5 + 32).toFixed(1)}°F`;
+      const temperature = `${hottest.temp.toFixed(1)}°${isCelsius ? 'C' : 'F'}`;
       document.getElementById('hottestPlaceDisplay').innerHTML = `
         <p>Hottest place right now: ${hottest.city}</p>
         <p>Temperature: ${temperature}</p>
       `;
     }
 
-    document.getElementById('tempSwitch').addEventListener('click', () => {
+    const tempSwitch = document.getElementById('tempSwitch');
+    tempSwitch.addEventListener('click', () => {
       isCelsius = !isCelsius;
+      tempSwitch.classList.add('fade-out');
+      setTimeout(() => {
+        tempSwitch.textContent = isCelsius ? '°C' : '°F';
+        tempSwitch.classList.remove('fade-out');
+        tempSwitch.classList.add('fade-in');
+        setTimeout(() => {
+          tempSwitch.classList.remove('fade-in');
+        }, 250);
+      }, 250);
       fetchHottestPlace(); // Re-fetch with updated unit
     });
 
